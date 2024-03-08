@@ -1,9 +1,10 @@
 ---
-title: 'Modul 12: Application of Machine Learning in Health Care'
+title: "Modul 12: Application of Machine Learning in Health Care"
 author: "Markus Schwaiger"
 output:
-  pdf_document: default
-  html_document: default
+html_document: default
+pdf_document: default
+
 ---
 
 # Task 1.1 Introduction
