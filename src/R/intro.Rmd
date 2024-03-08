@@ -1,0 +1,25 @@
+---
+title: 'Modul 12: Application of Machine Learning in Health Care'
+author: "Markus Schwaiger"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Task 1.1 Introduction
+- Create a code chunk (ALT+ CTRL + i) with a function sayHello that returns your name (parameter name).
+- Call function sayHello in another code chunk.
+
+## Define Function
+Here I define the function.
+```{r}
+sayHello <- function(name){
+  return(paste0("Hello ", name,"!"))
+}
+```
+
+## Call Function
+Now I use the function.
+```{r}
+sayHello("Markus")
+```
