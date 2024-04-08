@@ -1,0 +1,97 @@
+---
+title: "Task 2.2 Supervised preprocessing and visualization"
+subtitle: "Modul 12: Application of Machine Learning in Health Care"
+author: "**Author:** Markus Schwaiger"
+date: "**Date:** April 8, 2024"
+output:
+html_document: default
+---
+- Load dataset diabetes.csv
+- Define and apply a function for IQR based outlier detection
+- Replace outliers with NA and select only complete cases (function complete.cases or drop_na if using tidyvers). Consider of the meaning of zeros. 
+- [Optional: Describe single features (R function describe of package Hmisc)]
+- Rank features using information gain (package FSelector)
+- Create boxplot and distribution plots of one discriminating (i.e., highest IG score) and one non-discriminating feature (i.e., smallest IG score)
+- Update your git-repository
+```{r}
+require(ggplot2)
+require(dplyr)
+require(Hmisc)
+require(FSelector)
+```
+
+## Load dataset diabetes.csv and get an overview
+```{r}
+diab <- read.csv("diabetes.csv")
+head(diab)
+dim(diab)
+sum(is.na(diab))
+diab_num <- select(diab, where(is.numeric))
+dim(diab_num)
+```
+
+- Dimension of full dataset: (768, 9)
+- Number of missing values: 0
+- Dimension of data with only numeric columns: (768, 8)
+
+## IQR based outlier detection
+```{r}
+outlier_dedection <- function(x){
+  q1 <- quantile(x, 0.25)
+  q3 <- quantile(x, 0.75)
+  iqr <- q3 - q1
+  lower_bound <- q1 - 1.5*iqr
+  upper_bound <- q3 + 1.5*iqr
+  outlier <- x < lower_bound | x > upper_bound
+  return(outlier)
+}
+```
+
+## Replace outliers with NA and select only complete cases
+```{r}
+diab_num <- diab[, sapply(diab, is.numeric)]
+outliers <- sapply(diab_num, outlier_dedection)
+for (col in names(diab_num)) {
+  diab[, col][outliers[, col]] <- NA
+}
+diab_complete_cases <- na.omit(diab)
+dim(diab_complete_cases)
+```
+- Dimension of diab_complete_cases: (639, 9)
+
+
+## Describe single features
+```{r}
+describe(diab_complete_cases)
+```
+
+## Supervised feature selection
+```{r}
+X <- diab_complete_cases[, -ncol(diab_complete_cases)]  # Features (select all rows and last column not)
+y <- diab_complete_cases[, ncol(diab_complete_cases)]   # class labels (all rows and only last column)
+ig <- information.gain(class ~., data = data.frame(X, class = y))
+print(ig)
+
+```
+
+## Boxplot and distribution for the Feature preg and plas
+
+```{r}
+ggplot(diab_complete_cases, aes(x = class, y = preg)) +
+  geom_boxplot() +
+  labs(title = "Boxplot: preg by class", x = "class", y = "preg")
+ggplot(diab_complete_cases, aes(x = preg, fill = class)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution plot: preg by class", x = "preg", y = "density")
+
+
+
+ggplot(diab_complete_cases, aes(x = class, y = plas)) +
+  geom_boxplot() +
+  labs(title = "Boxplot: plas by class", x = "class", y = "plas")
+ggplot(diab_complete_cases, aes(x = plas, fill = class)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution plot: plas by class", x = "plas", y = "density")
+
+```
+
