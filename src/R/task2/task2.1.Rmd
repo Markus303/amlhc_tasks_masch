@@ -1,0 +1,53 @@
+---
+title: "Task 2.1 Unsupervised preprocessing and visualization"
+subtitle: "Modul 12: Application of Machine Learning in Health Care"
+author: "**Author:** Markus Schwaiger"
+date: "**Date:** April 7, 2024"
+output:
+html_document: default
+---
+- Load dataset food.csv
+- Get an overview by analyzing dimension, number of missing values and feature scaling
+- Preprocess data using z-transformation (R function scale)
+- Perform a principal component analysis (R function princomp)
+- Create a score plot using PC1 and PC2 (R function qplot)
+- Update your git-repository
+```{r}
+require(ggplot2)
+```
+
+## Load dataset food.csv and get an overview
+```{r}
+food <- read.csv("food.csv", row.names = 1) # first column is used as row names
+head(food)
+dim(food)
+sum(is.na(food))
+summary(food)
+```
+- The first column (variable X) is used as row names
+- The dataset contains primary numeric features
+- The dataset consists of 25 rows and 9 columns (without the first column-variable X)
+- There are no missing values in the dataset
+
+## Preprocess data using z-transformation
+```{r}
+food_scale <- scale(food)
+summary(food_scale)
+```
+
+## Perform a principal component analysis (PCA)
+```{r}
+pca <- princomp(food_scale)
+summary(pca)
+```
+
+## Score plot the reduced dataset
+- Comp.1 = PC1 and Comp.2 = PC2
+- I used ggplot() instead of qplot() because of the description in the ggplot2 documentation, that qplot() is deprecated
+```{r}
+food_red <- pca$scores[, 1:2]
+ggplot(data = food_red, aes(x = Comp.1, y = Comp.2,label =rownames(food_red))) +
+  geom_point() +
+  geom_text(size = 2, hjust = -0.2) +
+  labs(x = "PC1", y = "PC2", title = "Score Plot using PC1 and PC2 by Countries")
+```
