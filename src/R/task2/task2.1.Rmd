@@ -46,6 +46,7 @@ summary(pca)
 - I used ggplot() instead of qplot() because of the description in the ggplot2 documentation, that qplot() is deprecated
 ```{r}
 food_red <- pca$scores[, 1:2]
+food_red <- food_red*-1
 ggplot(data = food_red, aes(x = Comp.1, y = Comp.2,label =rownames(food_red))) +
   geom_point() +
   geom_text(size = 2, hjust = -0.2) +
