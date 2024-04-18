@@ -18,7 +18,7 @@ require(ggplot2)
 
 ## Load dataset food.csv and get an overview
 ```{r}
-food <- read.csv("food.csv", row.names = 1) # first column is used as row names
+food <- read.csv("../data/food.csv", row.names = 1) # first column is used as row names
 head(food)
 dim(food)
 sum(is.na(food))

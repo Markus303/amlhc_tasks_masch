@@ -22,7 +22,7 @@ require(FSelector)
 
 ## Load dataset diabetes.csv and get an overview
 ```{r}
-diab <- read.csv("diabetes.csv")
+diab <- read.csv("../data/diabetes.csv")
 head(diab)
 dim(diab)
 sum(is.na(diab))
