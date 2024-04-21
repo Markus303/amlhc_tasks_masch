@@ -1,0 +1,76 @@
+---
+title: "Task 3.1 Unsupervised Learning - Clustering"
+subtitle: "Modul 12: Application of Machine Learning in Health Care"
+author: "**Author:** Markus Schwaiger"
+date: "**Date:** April 21, 2024"
+output:
+html_document: default
+---
+- Load dataset food.csv
+- Preprocess data using z-transformation (R function scale)
+- Apply KMeans for different number of clusters by varying k from 2 to 5. Calculate the Silhouette coefficient (function intCriteria of package clusterCrit) and select the final number of clusters
+- Visualize the final kMeans clustering using PCA (R function princomp and qplot)
+- Create a hierarchical clustering (R function hclust) and plot the dendrogram. In addition, create a heatmap with a clustering of samples and variables (R function heatmap)
+- Create a density based clustering (R function dbscan of package fpc)
+- Update your git-repository.
+```{r}
+require(clusterCrit)
+require(factoextra)
+require(ggplot2)
+require(gplots)
+require(fpc)
+
+```
+
+## Load and scale dataset food.csv
+```{r}
+food <- read.csv("../data/food.csv", row.names = 1) # first column is used as row names
+food_scale <- scale(food)
+```
+
+## Perform KMeans clustering for different numbers of clusters (k = 2 to 5)
+```{r}
+set.seed(123)
+for (k in 2:5) {
+  kmc <- kmeans(food_scale, centers = k) #kmc=kMeans cluster
+  ci <- intCriteria(food_scale, kmc$cluster, "silhouette") #ci=clusterindex
+  sil_coeff <- ci$silhouette[1]
+  cat("Silhouette coefficient für k=", k, ":\n")
+  print(sil_coeff)
+}
+```
+
+## Select the optimal number of clusters based on the silhouette coefficient
+```{r}
+optimal_k <- which.max(sil_coeff) + 1
+final_kmeans <- kmeans(food_scale, centers = optimal_k)
+cat("Optimal number of clusters:", optimal_k, "\n")
+fviz_nbclust(food_scale, kmeans, method='silhouette')
+```
+
+## Visualize the final KMeans clustering using PCA
+```{r}
+pca <- princomp(food_scale)
+food_red <- pca$scores[,1:2] 
+food_red <- food_red * -1
+fviz_cluster(final_kmeans, data =food_red ,   pointsize = 1, labelsize =8)
+```
+
+## Hierarchical clustering & Heatmap
+```{r}
+hclust_result <- hclust(dist(food_scale))
+plot(hclust_result, 
+     main = "Dendrogram of hierarchical clustering",
+     xlab = "Country",
+     ylab = "Distance",
+     cex = 0.8,  
+     hang = -1)
+heatmap.2(food_scale, scale = "none", main = "Heatmap")
+
+```
+
+## Density based clustering
+```{r}
+dbc <- dbscan(food_scale, eps = 2.5, MinPts = 3)
+fviz_cluster(dbc, data =food_red ,   pointsize = 1, labelsize =8)
+```
