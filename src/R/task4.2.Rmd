@@ -1,0 +1,65 @@
+---
+title: "Task 4.2 Supervised Learning - Classification"
+subtitle: "Modul 12: Application of Machine Learning in Health Care"
+author: "**Author:** Markus Schwaiger"
+date: "**Date:** May 3, 2024"
+output:
+html_document: default
+---
+- Load dataset diabetes.arff dataset (use R package foreign)
+- Fit a Generalized Linear Model (use R function glm)
+- Evaluate the model (R function summary and plot)
+- Train the model using R function train of package caret
+- Update your git-repository. 
+```{r}
+require(foreign)
+require(caret)
+```
+
+# Load dataset diabetes.arff
+```{r}
+diab <- read.arff("../data/diabetes.arff")
+head(diab)
+dim(diab)
+sum(is.na(diab))
+```
+
+# Fit and evaluate a generalized linear model
+```{r}
+diab_glm <- glm(class ~ . , data=diab, family = "binomial")
+diab_glm
+summary(diab_glm)
+```
+
+- A 1 unit increase in preg is associated with an increase in the odds ratio of class by 0.1231823.
+- A 1 unit increase in plas is associated with an increase in the odds ratio of class by 0.0351637.
+- A 1 unit increase in pres is associated with a decrease in the odds ratio of class by 0.0132955.
+- A 1 unit increase in skin is associated with an increase in the odds ratio of class by 0.0006190.
+- A 1 unit increase in insu is associated with a decrease in the odds ratio of class by 0.0011917.
+- A 1 unit increase in mass is associated with an increase in the odds ratio of class by 0.0897010.
+- A 1 unit increase in pedi is associated with an increase in the odds ratio of class by  0.9451797.
+- A 1 unit increase in age is associated with an increase in the odds ratio of class by 0.0148690.
+
+- Based on the p values we can see that at a 5% significance level, the variables skin, insu and age are not relevant predictors of diabetes for this sample.
+
+# Train the model
+### Model 1: All variabeles
+```{r}
+set.seed(123)
+fitControl <- trainControl(method="cv",number =10)
+glmFit <- train(class ~., data=diab, method = "glm", preProc=c("center","scale"), trControl = fitControl)
+glmFit
+```
+
+### Model 2: Only significant variables
+```{r}
+set.seed(123)
+glmFit2 <- train(class ~ preg + plas + pres + mass+ pedi,data=diab,method = "glm", preProc=c("center","scale"), trControl = fitControl)
+glmFit2
+```
+
+### Comparing Model 1 vs. Model 2
+```{r}
+rbind(glmFit$results, glmFit2$results)
+```
+

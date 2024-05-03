@@ -1,0 +1,94 @@
+---
+title: "Task 4.1 Supervised Learning - Regression"
+subtitle: "Modul 12: Application of Machine Learning in Health Care"
+author: "**Author:** Markus Schwaiger"
+date: "**Date:** May 3, 2024"
+output:
+html_document: default
+---
+- Load dataset heartdata.csv
+- Check assumptions of a linear regression model (use R functions cor.test and hist and plot), see also Linear Regression in R | An Easy Step-by-Step Guide (scribbr.com)
+- Fit a linear regression model (use R function lm)
+- Evaluate the model (R function summary and plot)
+- Train the model using R function train of package caret
+- Update your git-repository. 
+```{r}
+require(ggplot2)
+require(caret)
+```
+
+# Load dataset heartdata.csv
+```{r}
+data <- read.csv("../data/heartdata.csv", row.names = 1) # first column is used as row names
+head(data)
+dim(data)
+sum(is.na(data))
+```
+
+# Check assumptions of a linear regression model
+### Correlation between biking and smoking (independent variables)
+```{r}
+correlation <- cor.test(data$biking, data$smoking)
+cat("The correlation between biking and smoking is:",correlation$estimate*100,"%")
+```
+- The correlation between biking and smoking is small, so we can include both parameters in our model.
+
+### Normality
+```{r}
+hist(data$heartdisease, main = "Histogram of the dependent variable (heartdisease)")
+```
+
+- The distribution is a bell curve, so we can proceed with linear regression.
+
+### Linearity
+```{r}
+plot(heartdisease ~ biking, data=data, main = "Scatterplot of heartdisease vs. biking")
+plot(heartdisease ~smoking, data=data, main = "Scatterplot of heartdisease vs. smoking")
+
+```
+
+- Both variables display a linear relationship, so we can proceed with linear regression.
+
+# Fit and evaluate a linear regression model
+```{r}
+hd_lm <- lm(heartdisease ~ ., data = data)
+hd_lm
+summary(hd_lm)
+
+par(mfrow=c(2,2))
+plot(hd_lm)
+```
+
+- An 1% increase in biking is associated with a 0.2001% decrease in the rate of heart disease
+- An 1% increase in smoking is associated with an 0.1783% increase in the rate of heart disease
+- Both p-values indicate a highly significance.
+- The residuals show no bias, so we can say our model fits the assumption of homoscedasticity.
+
+# Visualization of the model
+```{r}
+plotting.data <- expand.grid(
+  biking = seq(min(data$biking), max(data$biking), length.out=30),
+  smoking=c(min(data$smoking), mean(data$smoking),max(data$smoking)))
+plotting.data$predicted.y <- predict.lm(hd_lm, newdata = plotting.data)
+plotting.data$smoking <- round(plotting.data$smoking, digits = 2)
+plotting.data$smoking <- as.factor(plotting.data$smoking)
+heart.plot <- ggplot(data, aes(x=biking, y=heartdisease)) +
+  geom_point() +
+  geom_line(data=plotting.data, aes(x=biking, y=predicted.y, color=smoking), linewidth=1.25) +
+  theme_bw() +
+  labs(title = "Rates of heart disease (% of population) \n as a function of biking to work and smoking",
+      x = "Biking to work (% of population)",
+      y = "Heart disease (% of population)",
+      color = "Smoking \n (% of population)")
+
+heart.plot
+```
+
+# Train the model
+```{r}
+set.seed(123)
+fitControl <- trainControl(method="cv",number =10)
+lmFit <- train(heartdisease ~., data=data, method = "lm", preProc=c("center","scale"), trControl = fitControl)
+lmFit
+```
+
