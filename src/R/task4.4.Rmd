@@ -1,0 +1,95 @@
+---
+title: "Task 4.4 Supervised Learning - Classification and hyperparameter tuning"
+subtitle: "Modul 12: Application of Machine Learning in Health Care"
+author: "**Author:** Markus Schwaiger"
+date: "**Date:** May 21, 2024"
+output:
+html_document: default
+---
+
+- Load dataset COX-2 Activity Data of caret package data(cox2)
+- Split the dataset into a training (75%) and test (25%) set (use R function createDataPartition of package caret)
+- Select a learning method such as random forest. Use preprocessing (scaling/centering) if necessary. A list of caret classifiers is available under 7 train Models By Tag | The caret Package (topepo.github.io) 
+- (optional): Define a tuning grid for your model. E.g., varying parameter mtry from 2 to 8 for the random forest classifier (use R function expand.grid
+- Perform a 10-fold cross validation using trainControl parameter of method train.
+- Analyze the performance values and feature importances using function varImp
+- Apply the final model to the test set and calculate confusion matrix and performance measures (R function predict and confusionMatrix of package caret). 
+IMPORTANT: If you use preprocessing you need to apply the transformation to the test by using predict function, see also section 3.6 of 3 Pre-Processing | The caret Package (topepo.github.io)
+- Update your git-repository. 
+```{r}
+require(caret)
+```
+
+# Load dataset COX-2 Activit
+```{r}
+data(cox2)
+X <- cox2Descr #the descriptors
+y <- cox2Class #the categorical outcome ("Active" or "Inactive") based on the $2^2.5$ cutoff
+```
+
+# Split the dataset into training (75%) and test (25%) sets
+- to get a realistic estimate of our performance after hyperparameter tuning
+```{r}
+set.seed(123)
+inTrain <- createDataPartition(y, p = 0.75, list = FALSE)
+X_train <- X[inTrain,]
+y_train <-y[inTrain]
+X_test <- X[-inTrain,]
+y_test <- y[-inTrain]
+```
+
+- Check the split
+```{r}
+dim(X)
+dim(X_train)
+dim(X_test)
+```
+
+- Identify and exclude zero-variance predictors
+```{r}
+featVar <- apply(X_train, 2, var)
+zerovVarFeat <- featVar == 0
+sum(zerovVarFeat)
+X_train <- X_train[,featVar>0]
+X_test <- X_test[,featVar>0]
+```
+
+# Set up preprocessing (scaling/centering) and apply to the training data
+```{r}
+preProc <- preProcess(X_train, method = c("center", "scale"))
+X_train <- predict(preProc, X_train)
+```
+
+# Train and evaluate the model
+- learning method: random forest
+```{r}
+set.seed(123)
+trControl <- trainControl(method="cv", number=10)  #10-fold cross validation
+model_rf <- train(X_train, y_train, 
+                  method="rf", 
+                  preProcess = c("center","scale"),
+                  trainControl=trControl)
+```
+
+# Analyze the performance values and feature importance
+```{r}
+model_rf
+importance <- varImp(model_rf)
+print(importance)
+best_rf <- model_rf$finalModel
+best_rf
+```
+
+# Apply the same preprocessing to the test data
+```{r}
+X_test <- predict(preProc, X_test)
+```
+
+# Predict on the test set using the final model (best_rf)
+```{r}
+y_predict <- predict(best_rf, X_test)
+confMatrix <- confusionMatrix(y_predict, y_test)
+confMatrix
+accuracy <- confMatrix$overall['Accuracy']
+cat("The accuracy of the random forest model is:", accuracy, "\n")
+```
